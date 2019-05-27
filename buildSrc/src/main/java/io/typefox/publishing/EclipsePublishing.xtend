@@ -262,7 +262,7 @@ class EclipsePublishing {
 	
 	private def String getBuildQualifier(P2Repository repository) {
 		switch (buildPrefix) {
-			case 'N': 'N'+buildPrefix+repository.buildTimestamp
+			case 'N': 'N'+repository.buildTimestamp
 			case 'S': osspub.version
 			case 'R': osspub.version
 		}
