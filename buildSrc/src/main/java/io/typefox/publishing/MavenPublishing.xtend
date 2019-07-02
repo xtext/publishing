@@ -157,7 +157,7 @@ class MavenPublishing {
 									signing in maven-publish.
 									https://discuss.gradle.org/t/how-to-publish-artifacts-signatures-asc-files-using-maven-publish-plugin/7422
 								'''
-								Files.write(content, dummyFile, Charset.forName('UTF-8'))
+								Files.asCharSink(dummyFile, Charset.forName('UTF-8')).write(content)
 							]
 						]
 						artifacts.add(archivesConfig.name, dummyFile) => [ a |
@@ -169,6 +169,7 @@ class MavenPublishing {
 					}
 				}
 				signing.sign(archivesConfig)
+				signing.useGpgCmd()
 				val signTask = tasks.getByName('''signArchives«pubProject.name»''')
 		
 				for (pubArtifact : pubProject.artifacts) {
@@ -350,7 +351,9 @@ class MavenPublishing {
 	}
 	
 	private def signing() {
-		project.extensions.getByName('signing') as SigningExtension
+		val s = project.extensions.getByName('signing') as SigningExtension
+		logger.error(s.toString)
+		s
 	}
 	
 	
