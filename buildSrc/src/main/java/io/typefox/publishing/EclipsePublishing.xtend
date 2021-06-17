@@ -70,8 +70,8 @@ class EclipsePublishing {
 				group = 'P2'
 				description = '''Download the zipped P2 repository for «repoName»'''
 				src(repository.url)
-	    		dest('''«buildDir»/p2-«repoName.toLowerCase»/repository-unsigned.zip''')
-	    		retries = 5
+				dest('''«buildDir»/p2-«repoName.toLowerCase»/repository-unsigned.zip''')
+				retries = 5
 			]
 			
 			val unzipP2Task = tasks.create('''unzip«repoName»P2Repository''', Copy) [
@@ -184,13 +184,13 @@ class EclipsePublishing {
 				
 				val p = project.providers.provider [
 					if (repository.group.nullOrEmpty)
-						return '''«repoName.toLowerCase»-Update-«buildPrefix»«repository.buildTimestamp».zip'''
+						archiveName = '''«repoName.toLowerCase»-Update-«repository.buildQualifier».zip'''
 					else {
 						val firstSegmentIndex = repository.group.indexOf('.')
 						if (firstSegmentIndex < 0)
-							return  '''«repository.group»-Update-«buildPrefix»«repository.buildTimestamp».zip'''
+							archiveName = '''«repository.group»-Update-«repository.buildQualifier».zip'''
 						else
-							return  '''«repository.group.substring(firstSegmentIndex + 1).replace('.', '-')»-Update-«buildPrefix»«repository.buildTimestamp».zip'''
+							archiveName = '''«repository.group.substring(firstSegmentIndex + 1).replace('.', '-')»-Update-«repository.buildQualifier».zip'''
 					}
 				]
 				archiveFileName.set(p)
@@ -204,7 +204,7 @@ class EclipsePublishing {
 					val promotePropertiesFile = file('''«rootDir»/build-result/promote.properties''')
 					val publisherPropertiesFile = file('''«rootDir»/build-result/publisher.properties''')
 					doLast [
-						Files.asCharSink(promotePropertiesFile, Charset.defaultCharset).write(generatePropoteProperties(repository))
+						Files.asCharSink(promotePropertiesFile, Charset.defaultCharset).write(generatePromoteProperties(repository))
 						Files.asCharSink(publisherPropertiesFile, Charset.defaultCharset).write(generatePublisherProperties(repository))
 					]
 					outputs.file(promotePropertiesFile)
@@ -235,7 +235,7 @@ class EclipsePublishing {
 		]
 	}
 	
-	private def generatePropoteProperties(P2Repository repository) '''
+	private def generatePromoteProperties(P2Repository repository) '''
 		java.home=«System.getenv('JAVA_HOME')»
 		eclipse.home=«ECLIPSE_HOME»
 		build.id=«buildPrefix»«repository.buildTimestamp»
@@ -258,6 +258,14 @@ class EclipsePublishing {
 			'R'
 		else
 			'S'
+	}
+	
+	private def String getBuildQualifier(P2Repository repository) {
+		switch (buildPrefix) {
+			case 'N': 'N'+repository.buildTimestamp
+			case 'S': osspub.version
+			case 'R': osspub.version
+		}
 	}
 	
 	private def getBuildTimestamp(P2Repository repository) {
